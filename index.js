@@ -7,6 +7,9 @@ import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 window.onload = () => {
   gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
+  /**
+   *  Navigation Scroll
+   */
   const fullPageScrollTween = gsap
     .to(window, { scrollTo: 0, paused: true, duration: 0.8 })
     .progress(1);
@@ -19,6 +22,9 @@ window.onload = () => {
     });
   });
 
+  /**
+   * Loading
+   */
   gsap
     .timeline({ delay: 0.5 })
     .to('.loading .typo', { y: 0 })
@@ -45,36 +51,9 @@ window.onload = () => {
       '<60%'
     );
 
-  new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        document.body.addEventListener('mousemove', onMousemove);
-      } else {
-        document.body.removeEventListener('mousemove', onMousemove);
-      }
-    });
-  }).observe(document.querySelector('.visual'));
-
-  function onMousemove({ movementX, movementY }) {
-    const val = 0.1;
-    gsap.set('.visual', {
-      perspectiveOrigin: `-=${movementX * val}px -=${movementY * val}px`,
-    });
-  }
-
-  function setPaddingToVisual() {
-    const visual = document.querySelector('.visual');
-    const offsetBottom = visual.offsetTop + visual.offsetHeight;
-    if (offsetBottom < innerHeight) {
-      gsap.set(visual, { height: `+=${innerHeight - offsetBottom}px` });
-    } else {
-      gsap.set(visual, { clearProps: 'height' });
-    }
-  }
-  setPaddingToVisual();
-
-  ScrollTrigger.addEventListener('refreshInit', setPaddingToVisual);
-
+  /**
+   * Cursor
+   */
   document.body.addEventListener('mousemove', ({ clientX, clientY }) => {
     gsap.to('.cursor', {
       top: clientY,
@@ -84,6 +63,43 @@ window.onload = () => {
     });
   });
 
+  /**
+   * Visual
+   */
+  const visual = document.querySelector('.visual');
+
+  // Visual : Mousemove
+  new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        document.body.addEventListener('mousemove', onMousemove);
+      } else {
+        document.body.removeEventListener('mousemove', onMousemove);
+      }
+    });
+  }).observe(visual);
+
+  function onMousemove({ movementX, movementY }) {
+    const val = 0.1;
+    gsap.set('.visual', {
+      perspectiveOrigin: `-=${movementX * val}px -=${movementY * val}px`,
+    });
+  }
+  // Visual : Set Height
+  function setVisualHeight() {
+    const offsetBottom = visual.offsetTop + visual.offsetHeight;
+    if (offsetBottom < innerHeight) {
+      gsap.set(visual, { height: `+=${innerHeight - offsetBottom}px` });
+    } else {
+      gsap.set(visual, { clearProps: 'height' });
+    }
+  }
+  setVisualHeight();
+  ScrollTrigger.addEventListener('refreshInit', setVisualHeight);
+
+  /**
+   * Section : About
+   */
   gsap.utils.toArray('.about .content').forEach((el) => {
     ScrollTrigger.create({
       trigger: el,
@@ -111,8 +127,103 @@ window.onload = () => {
     },
   });
 
+  /**
+   * Section : Work
+   */
   const cursor = document.querySelector('.cursor');
-  document.querySelectorAll('.work__workItem').forEach((el) => {
+  const workItems = document.querySelectorAll('.work__workItem');
+  const workModal = document.querySelector('.work-modal');
+  function checkImage(imageSrc) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = imageSrc;
+      img.onload = () => resolve(img);
+      img.onerror = () => reject();
+    });
+  }
+  class Work {
+    constructor(project, design, year, desc, site) {
+      this.project = project;
+      this.design = design;
+      (this.year = year), (this.desc = desc);
+      this.site = site;
+      this.loadedImage = [];
+      this.loadImage();
+    }
+    loadImage = async function () {
+      for (let i = 1; i < 99; i++) {
+        const imageSrc = `src/image/work-${this.project}-${i}.png`;
+
+        try {
+          const img = await checkImage(imageSrc);
+          this.loadedImage.push(img);
+        } catch {
+          break;
+        }
+      }
+    };
+    appendHTML = () => {
+      this.appendInfo();
+      this.appendImage();
+    };
+    appendInfo = () => {
+      document.querySelector('.work-modal__workInfo').innerHTML = `
+         <div class="info project">
+          <em class="label">project</em><em class="value">${this.project}</em>
+        </div>
+        <div class="info design">
+          <em class="label">design</em>
+          <em class="value">${this.design}</em>
+        </div>
+        <div class="info year">
+          <em class="label">year</em>
+          <em class="value">${this.year}</em>
+        </div>
+        <p class="desc">
+          ${this.desc}
+        </p>
+        <div class="visit-btn-wrap">
+          <a href=${this.site || '#'} class="visit-btn">visit site</a>
+        </div>
+      `;
+    };
+    appendImage = () => {
+      const parentNode = document.querySelector('.work-modal__workImg');
+      parentNode.innerHTML = '';
+      for (let img of this.loadedImage) {
+        const imgWrap = document.createElement('div');
+        imgWrap.classList.add('img-wrap');
+        imgWrap.appendChild(img);
+        parentNode.appendChild(imgWrap);
+      }
+    };
+  }
+
+  const workList = {
+    appknot: new Work(
+      'appknot',
+      '앱노트',
+      2024,
+      '물리 엔진 라이브러리 Matter JS와 애니메이션 라이브러리 GSAP을 사용하여 만든 총 5페이지의 인터랙티브 웹사이트입니다. 복잡한 애니메이션이 적용되어 반응형이나 모바일로 제작하지 않았습니다.',
+      'https://chaewonsung.github.io/appknot/'
+    ),
+    dongguk: new Work(
+      'dongguk',
+      '동국대학교 산학협력센터',
+      2024,
+      '통통 튀는 색감과 아이콘을 활용한 총 4개의 레이아웃과 6개의 페이지로 이루어진 반응형 웹사이트입니다. SCSS의 함수와 for 반복문을 활용해 배경 아이콘을 배치하였습니다.',
+      'https://chaewonsung.github.io/dongguk-clone/'
+    ),
+    qude: new Work(
+      'qude',
+      'qude',
+      2024,
+      '간단한 스크롤 애니메이션을 적용한 html 위주의 단일 페이지 반응형 웹사이트입니다.',
+      'https://chaewonsung.github.io/qude/'
+    ),
+  };
+
+  workItems.forEach((el) => {
     const workInfo = el.querySelector('.work-info-content-wrap');
     el.addEventListener('mouseenter', (e) => {
       gsap.to(workInfo, { y: 0, opacity: 1, duration: 0.4 });
@@ -137,119 +248,33 @@ window.onload = () => {
     });
 
     el.addEventListener('click', () => {
-      modifyWorkModal(el.dataset.name);
+      setTimeout(() => {
+        workModal.scrollTop = 0;
+      }, 0);
+      workList[el.dataset.name].appendHTML();
       document.body.classList.add('modal-open');
-      document.querySelector('.work-modal').classList.add(el.dataset.name);
+      workModal.classList.add(el.dataset.name);
     });
   });
-
-  class Work {
-    constructor(project, design, year, desc, site) {
-      this.project = project;
-      this.design = design;
-      (this.year = year), (this.desc = desc);
-      this.site = site;
-    }
-  }
-  const workList = {
-    appknot: new Work(
-      'appknot',
-      '앱노트',
-      2024,
-      '이 웹사이트는ㄴ 제 어쩌구저꺼주',
-      'https://chaewonsung.github.io/appknot/'
-    ),
-    dongguk: new Work(
-      'dongguk',
-      '동국대학교 산학협력센터',
-      2024,
-      '이 웹사이트는 어쩌구저꺼주거',
-      'https://chaewonsung.github.io/dongguk-clone/'
-    ),
-    qude: new Work(
-      'qude',
-      'qude',
-      2024,
-      '안뇽안뇽 방가방가 ㅋㅋ안뇽안뇽 방가방가 ㅋㅋ안뇽안뇽 방가방가 ㅋㅋ안뇽안뇽 방가방가 ㅋㅋ안뇽안뇽 방가방가 ㅋㅋ안뇽안뇽 방가방가 ㅋㅋ안뇽안뇽 방가방가 ㅋㅋ'
-    ),
-  };
-
-  function modifyWorkModal(target) {
-    if (Object.keys(workList).includes(target)) {
-      const { project, design, year, desc, site } = workList[target];
-      document.querySelector('.work-modal__workInfo').innerHTML = `
-         <div class="info project">
-          <em class="label">project</em><em class="value">${project}</em>
-        </div>
-        <div class="info design">
-          <em class="label">design</em>
-          <em class="value">${design}</em>
-        </div>
-        <div class="info year">
-          <em class="label">year</em>
-          <em class="value">${year}</em>
-        </div>
-        <p class="desc">
-          ${desc}
-        </p>
-        <div class="visit-btn-wrap">
-          <a href=${site || '#'} class="visit-btn">visit site</a>
-        </div>
-      `;
-
-      (async function () {
-        let HTML = '';
-
-        for (let i = 1; i < 99; i++) {
-          const imageSrc = `../src/image/work-${project}-${i}.png`;
-
-          try {
-            await checkImage(imageSrc);
-            HTML += `
-                <div class="img-wrap">
-                  <img src="${imageSrc}" alt="" />
-                </div>
-              `;
-          } catch {
-            break;
-          }
-        }
-        document.querySelector('.work-modal__workImg').innerHTML = HTML;
-      })();
-    } else {
-    }
-  }
-
-  function checkImage(imageSrc) {
-    return new Promise((resolve, reject) => {
-      var img = new Image();
-      img.src = imageSrc;
-      img.onload = () => resolve();
-      img.onerror = () => reject();
-    });
-  }
 
   document.querySelectorAll('.work-modal .close-btn').forEach((el) => {
     el.addEventListener('click', () => {
       document.body.classList.remove('modal-open');
-      document.querySelector('.work-modal').className = 'work-modal';
+      workModal.className = 'work-modal';
     });
   });
 
+  /**
+   * Section : Contact
+   */
+  const contactInfo = document.querySelector('.contact__info');
+
   gsap.set('.contact', {
-    marginTop: () => -document.querySelector('.contact__info').offsetHeight,
+    marginTop: () => -contactInfo.offsetHeight,
   });
-  // gsap.from('.gray', {
-  //   y: document.querySelector('.contact__info').offsetHeight,
-  //   scrollTrigger: {
-  //     trigger: '.contact',
-  //     end: 'bottom bottom',
-  //     scrub: 0,
-  //   },
-  // });
 
   gsap.to('.gray', {
-    y: -document.querySelector('.contact__info').offsetHeight,
+    y: -contactInfo.offsetHeight,
     scaleX: 0.97,
     ease: 'none',
     scrollTrigger: {
@@ -263,6 +288,9 @@ window.onload = () => {
     gsap.to(window, { scrollTo: 0, duration: 0.7 });
   });
 
+  /**
+   * GSAP : Match Media
+   */
   const mm = gsap.matchMedia();
   mm.add('(min-width: 769px)', () => {
     gsap.fromTo(
