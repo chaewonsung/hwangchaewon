@@ -279,7 +279,16 @@ body.modal-open .work-modal {
   line-height: 1.4;
 }
 .work-modal__workInfo .visit-btn-wrap .visit-btn {
+  display: inline-block;
   margin-left: calc(100% - var(--col2-width));
+  background-color: #181818;
+  color: #ebebeb;
+  padding: 0.7em 1em;
+  transform: translateX(-15px);
+  border-radius: 99px;
+}
+.work-modal__workInfo .visit-btn-wrap .visit-btn:hover {
+  opacity: 0.8;
 }
 .work-modal__workImg {
   display: flex;
