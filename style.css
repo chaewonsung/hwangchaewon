@@ -314,6 +314,9 @@ body.modal-open .work-modal {
 .work-modal.qude .work-modal__workInfo .project .value {
   margin-right: 20vw;
 }
+.work-modal.carrot .work-modal__workInfo .project .value {
+  margin-right: 8vw;
+}
 
 .container {
   position: relative;
