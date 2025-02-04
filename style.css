@@ -651,9 +651,9 @@ header nav ul {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  font-family: "Rubik Glitch", sans-serif;
   text-align: center;
   font-size: 6vw;
+  font-weight: 700;
   text-shadow: 0 0 5px #ebebeb;
 }
 .work .text-deco {
